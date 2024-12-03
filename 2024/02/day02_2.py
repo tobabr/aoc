@@ -22,14 +22,7 @@ def main():
         for line in f.readlines():
             levels.append([int(v) for v in line.split()])
 
-    sum = 0
-    for level in levels:
-        if valid_ascent(level) or valid_decent(level):
-            sum += 1
-        else:
-            print(level)
-    print(sum)
-    #print(sum([valid_ascent(level) or valid_decent(level) for level in levels]))
+    print(sum([valid_ascent(level) or valid_decent(level) for level in levels]))
 
     return 0
 
