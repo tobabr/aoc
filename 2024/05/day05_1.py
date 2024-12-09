@@ -8,12 +8,7 @@ def update_rules(rule: list, ordening_rules: dict) -> None:
     second['pre'].append(rule[0])
 
 def check_order(idx, update, rule) -> bool:
-    #print(f"idx = {idx}, update = {update}, rule = {rule}")
-    if idx > 0 and update[idx-1] not in rule['pre']:
-        #print(f"{idx} > 0 and {update[idx - 1]} not in {rule['pre']}")
-        return False
     if idx < len(update)-1  and update[idx+1] not in rule['post']:
-        #print(f"{idx} < {len(update)} and {update[idx+1]} not in {rule['post']}")
         return False
 
     return True
