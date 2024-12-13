@@ -4,9 +4,6 @@ from copy import deepcopy
 from enum import Enum
 from textwrap import wrap
 
-from sympy import false
-
-
 class Pos:
     def __init__(self, row, col):
         self._row = row
@@ -94,18 +91,31 @@ class Map:
         self._map = text_map
         self._guard: Guard = Guard(find_start(self._map))
         self._visited = self.mark_visited(self._guard.pos)
+        self._loops = 0
 
     def mark_visited(self, pos: Pos) -> int:
-        if self._map[pos.y][pos.x] == 'X':
-            return 0
-        else:
-            self._map[pos.y][pos.x] = 'X'
+        if self._map[pos.y][pos.x] == '.':
+            self._map[pos.y][pos.x] = self._guard.direction.name
             return 1
+        else:
+            return 0
+
+    def _next_is_loop_candidate(self, next_possition: Pos) -> bool:
+        if self._position_outside_map(next_possition):
+            return False
+        cur_pos = self._guard.pos
+        if self._map[next_possition.y][next_possition.x] == '.' and self._map[cur_pos.y][cur_pos.x] == Direction.RIGHT.name:
+            return True
 
     def _get_direction(self) -> None:
         #print(f"current: {self._guard.pos}")
         next = next_pos(self._guard.pos, self._guard.direction)
        # print(f"next: {next}")
+
+        if self._next_is_loop_candidate(next):
+            self._guard.turn_right()
+            self._loops += 1
+            return
 
         while not self._position_outside_map(next) and self._map[next.y][next.x] == '#':
             self._guard.turn_right()
@@ -131,6 +141,10 @@ class Map:
     def get_num_visited(self):
         return self._visited
 
+    def get_num_loops(self):
+        return self._loops
+
+
 class Game:
 
     def __init__(self, file_input):
@@ -148,12 +162,15 @@ class Game:
     def visited(self):
         return self._world_map.get_num_visited()
 
+    def loops(self):
+        return self._world_map.get_num_loops()
+
 def main():
 
-    game = Game('data.txt')
+    game = Game('test_data.txt')
     game.start()
 
-    print(f"Number of visited cells: {game.visited()}")
+    print(f"Number of loops: {game.loops()}")
 
 
 
