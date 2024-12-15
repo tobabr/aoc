@@ -4,6 +4,9 @@ from copy import deepcopy
 from enum import Enum
 from textwrap import wrap
 
+from sympy.codegen import Print
+
+
 class Pos:
     def __init__(self, row, col):
         self._row = row
@@ -11,6 +14,7 @@ class Pos:
 
     def __repr__(self) -> str:
         return f"({self._row},{self._col})"
+
     def up(self):
         self._row += 1
 
@@ -37,6 +41,16 @@ class Direction(Enum):
     DOWN = 2
     LEFT = 3
 
+def direction_str(direction) -> str:
+    if direction == Direction.UP:
+        return '^'
+    if direction == Direction.RIGHT:
+        return '>'
+    if direction == Direction.LEFT:
+        return '<'
+    if direction == Direction.DOWN:
+        return 'V'
+
 def next_pos(current: Pos, direction: Direction) -> Pos:
     if direction == Direction.UP:
         return Pos(current.y-1, current.x)
@@ -59,15 +73,7 @@ class Guard:
         self._pos: Pos = start
         self._direction: Direction = Direction.UP
 
-    def __repr__(self) -> str:
-        if self._direction == Direction.UP:
-            return '^'
-        if self._direction == Direction.RIGHT:
-            return '>'
-        if self._direction == Direction.LEFT:
-            return '<'
-        if self._direction == Direction.DOWN:
-            return 'V'
+
 
     @property
     def pos(self):
@@ -93,18 +99,29 @@ class Map:
         self._visited = self.mark_visited(self._guard.pos)
         self._loops = 0
 
+    def __repr__(self):
+        ret = ''
+        for idx, row in enumerate(self._map):
+            if idx > 0:
+                ret += '\n'
+            for col in row:
+                ret += col
+
+        return ret
+
     def mark_visited(self, pos: Pos) -> int:
-        if self._map[pos.y][pos.x] == '.':
-            self._map[pos.y][pos.x] = self._guard.direction.name
-            return 1
-        else:
-            return 0
+        visited = 0
+        if self._map[pos.y][pos.x] in '.':
+            visited = 1
+        self._map[pos.y][pos.x] = direction_str(self._guard.direction)
+        return visited
 
     def _next_is_loop_candidate(self, next_possition: Pos) -> bool:
-        if self._position_outside_map(next_possition):
+        if self._position_outside_map(next_possition) or self._map[next_possition.y][next_possition.x] == '#':
             return False
         cur_pos = self._guard.pos
-        if self._map[next_possition.y][next_possition.x] == '.' and self._map[cur_pos.y][cur_pos.x] == Direction.RIGHT.name:
+        if self._map[cur_pos.y][cur_pos.x] == direction_str(Direction((self._guard.direction.value + Direction.RIGHT.value) % 4)):
+           # self._map[next_possition.y][next_possition.x] = 'O'
             return True
 
     def _get_direction(self) -> None:
@@ -113,9 +130,7 @@ class Map:
        # print(f"next: {next}")
 
         if self._next_is_loop_candidate(next):
-            self._guard.turn_right()
             self._loops += 1
-            return
 
         while not self._position_outside_map(next) and self._map[next.y][next.x] == '#':
             self._guard.turn_right()
@@ -165,13 +180,16 @@ class Game:
     def loops(self):
         return self._world_map.get_num_loops()
 
+    def print_map(self):
+        print(self._world_map)
+
 def main():
 
     game = Game('test_data.txt')
     game.start()
 
     print(f"Number of loops: {game.loops()}")
-
+    game.print_map()
 
 
     return 0
